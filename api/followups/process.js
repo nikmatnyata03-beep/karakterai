@@ -156,7 +156,7 @@ if (qstashSig) {
     body: '',
   }).catch(() => false);
   if (!isValid) return res.status(401).json({ error: 'Invalid QStash signature' });
-} else if (process.env.CRON_SECRET && cronAuth !== Bearer ${process.env.CRON_SECRET}) {
+} else if (process.env.CRON_SECRET && cronAuth !== `Bearer ${process.env.CRON_SECRET}`) {
   // Fallback: Vercel Cron atau manual test
   return res.status(401).json({ error: 'Unauthorized' });
 }
