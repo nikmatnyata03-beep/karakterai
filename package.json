@@ -9,6 +9,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
     "web-push": "^3.6.7"
+    "@upstash/qstash": "^2.7.0"
   },
   "devDependencies": {
     "vercel": "^39.3.0"
