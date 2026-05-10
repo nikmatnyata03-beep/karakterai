@@ -5,12 +5,6 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ],
-  "crons": [
-    {
-      "path": "/api/followups/process",
-      "schedule": "* * * * *"
-    }
-  ],
   "headers": [
     {
       "source": "/sw.js",
