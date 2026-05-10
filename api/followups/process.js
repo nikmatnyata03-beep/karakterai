@@ -139,10 +139,27 @@ async function sendPushNotification(userId, charName, firstLine) {
 
 export default async function handler(req, res) {
   // Vercel automatically sets CRON_SECRET and passes it as Bearer token
-  const authHeader = req.headers.authorization;
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  // Vercel Cron auth
+const cronAuth = req.headers.authorization;
+// QStash auth (pakai signature verification)
+const qstashSig = req.headers['upstash-signature'];
+
+if (qstashSig) {
+  // Request dari QStash — verifikasi signature
+  const { Receiver } = await import('@upstash/qstash/nodejs');
+  const receiver = new Receiver({
+    currentSigningKey: process.env.QSTASH_CURRENT_SIGNING_KEY,
+    nextSigningKey:    process.env.QSTASH_NEXT_SIGNING_KEY,
+  });
+  const isValid = await receiver.verify({
+    signature: qstashSig,
+    body: '',
+  }).catch(() => false);
+  if (!isValid) return res.status(401).json({ error: 'Invalid QStash signature' });
+} else if (process.env.CRON_SECRET && cronAuth !== Bearer ${process.env.CRON_SECRET}) {
+  // Fallback: Vercel Cron atau manual test
+  return res.status(401).json({ error: 'Unauthorized' });
+}
 
   const now = new Date().toISOString();
 
