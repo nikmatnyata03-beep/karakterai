@@ -12,7 +12,7 @@ const supabase = createClient(
 
 // Configure web-push VAPID
 webpush.setVapidDetails(
-  `mailto:${process.env.VAPID_EMAIL || 'admin@neuralchat.app'}`,
+  `mailto:${process.env.VAPID_EMAIL || 'nikmatnyata03@gmail.com'}`,
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY
 );
