@@ -12,7 +12,7 @@ const supabase = createClient(
 
 // Configure web-push VAPID
 webpush.setVapidDetails(
-  `mailto:${process.env.VAPID_EMAIL || 'admin@neuralchat.app'}`,
+  `mailto:${process.env.VAPID_EMAIL || 'nikmatnyata03@gmail.com'}`,
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY
 );
@@ -76,7 +76,7 @@ ATURAN PENTING:
       Authorization: `Bearer ${api_key}`,
       'Content-Type': 'application/json',
       'X-Title': 'NeuralChat',
-      'HTTP-Referer': process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://neuralchat.app',
+      'HTTP-Referer': process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://mau-mandi.vercel.app',
     },
     body: JSON.stringify({
       model: openrouter_model || 'google/gemini-2.0-flash-001',
