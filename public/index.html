@@ -1096,6 +1096,11 @@ textarea.form-input{resize:vertical;min-height:80px;line-height:1.5}
       </div>
       <div style="font-size:10.5px;color:var(--text3);margin-top:5px">Buat agent di <a href="https://elevenlabs.io/app/conversational-ai" target="_blank" style="color:var(--accent3)">elevenlabs.io/app/conversational-ai</a> · Karakter memerlukan Agent ID agar tombol 📞 muncul</div>
     </div>
+    <div class="form-group">
+      <label class="form-label">🔊 ElevenLabs Voice ID <span style="font-size:10px;color:var(--text3);font-weight:400">(opsional — override suara agent)</span></label>
+      <input type="text" id="char-voice-id-input" class="form-input" placeholder="Contoh: EXAVITQu4vr4xnSDxMaL" style="font-family:monospace;font-size:12.5px" />
+      <div style="font-size:10.5px;color:var(--text3);margin-top:5px">Cari Voice ID di <a href="https://elevenlabs.io/app/voice-library" target="_blank" style="color:var(--accent3)">elevenlabs.io → Voice Library</a> · Jika diisi, suara agent akan diganti saat panggilan dimulai</div>
+    </div>
 
     <!-- FOLLOW-UP ENGINE CONFIG -->
     <div class="followup-section" style="display:none">
@@ -3953,7 +3958,7 @@ async function ncInitPushNotifications() {
 // ── State ────────────────────────────────────────────────────
 let vcall = {
   active: false,
-  conversation: null,    // ElevenLabsConv instance
+  conversation: null,
   muted: false,
   showTranscript: false,
   timerInterval: null,
@@ -3970,19 +3975,17 @@ class ElevenLabsConv {
     this.outputSampleRate = 16000; this.muted = false; this.cb = {};
   }
 
-  async startSession({ agentId, signedUrl, onConnect, onDisconnect, onError, onModeChange, onMessage }) {
+  async startSession({ agentId, signedUrl, voiceId, onConnect, onDisconnect, onError, onModeChange, onMessage }) {
     this.cb = { onConnect, onDisconnect, onError, onModeChange, onMessage };
+    this._voiceId = voiceId || null;
 
-    // Mic — request at 16kHz; browser will resample if hardware differs
     this.micStream = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 }
     });
 
-    // AudioContext at 16kHz — input captured here, output resampled automatically
     this.audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     await this.audioCtx.resume();
 
-    // ScriptProcessor: Float32 PCM → Int16 → base64 → WebSocket
     const src = this.audioCtx.createMediaStreamSource(this.micStream);
     this.scriptNode = this.audioCtx.createScriptProcessor(4096, 1, 1);
     this.scriptNode.onaudioprocess = (e) => {
@@ -3993,7 +3996,6 @@ class ElevenLabsConv {
         const s = Math.max(-1, Math.min(1, f32[i]));
         pcm[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
       }
-      // Safe base64 encode (avoids call-stack overflow on large buffers)
       const bytes = new Uint8Array(pcm.buffer);
       let bin = '';
       for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
@@ -4002,10 +4004,22 @@ class ElevenLabsConv {
     src.connect(this.scriptNode);
     this.scriptNode.connect(this.audioCtx.destination);
 
-    // WebSocket — signed URL takes priority; fallback to public agentId endpoint
     const wsUrl = signedUrl || `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${encodeURIComponent(agentId)}`;
     this.ws = new WebSocket(wsUrl);
-    this.ws.onopen    = () => this.cb.onConnect?.();
+
+    this.ws.onopen = () => {
+      // Override voice if a Voice ID is set on this character
+      if (this._voiceId) {
+        this.ws.send(JSON.stringify({
+          type: 'conversation_initiation_client_data',
+          conversation_config_override: {
+            tts: { voice_id: this._voiceId }
+          }
+        }));
+      }
+      this.cb.onConnect?.();
+    };
+
     this.ws.onclose   = () => this.cb.onDisconnect?.();
     this.ws.onerror   = () => this.cb.onError?.(new Error('WebSocket gagal terhubung'));
     this.ws.onmessage = ({ data }) => { try { this._msg(JSON.parse(data)); } catch(e) {} };
@@ -4015,7 +4029,6 @@ class ElevenLabsConv {
   _msg(m) {
     switch (m.type) {
       case 'conversation_initiation_metadata': {
-        // Parse output sample rate from format string e.g. "pcm_16000" → 16000
         const fmt = m.conversation_initiation_metadata_event?.agent_output_audio_format || 'pcm_16000';
         this.outputSampleRate = parseInt(fmt.replace('pcm_', '')) || 16000;
         break;
@@ -4034,7 +4047,7 @@ class ElevenLabsConv {
         this.cb.onModeChange?.({ mode: 'listening' });
         break;
       case 'interruption':
-        this.nextPlayAt = 0;          // flush audio queue
+        this.nextPlayAt = 0;
         this.cb.onModeChange?.({ mode: 'listening' });
         break;
       case 'ping':
@@ -4046,7 +4059,6 @@ class ElevenLabsConv {
 
   _play(b64) {
     try {
-      // Decode base64 → Uint8 → Int16 → Float32
       const bin = atob(b64);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
@@ -4054,19 +4066,16 @@ class ElevenLabsConv {
       const f32   = new Float32Array(pcm16.length);
       for (let i = 0; i < pcm16.length; i++) f32[i] = pcm16[i] / 32768.0;
 
-      // AudioBuffer at server's output rate; AudioContext auto-resamples to 16kHz
       const buf  = this.audioCtx.createBuffer(1, f32.length, this.outputSampleRate);
       buf.getChannelData(0).set(f32);
       const node = this.audioCtx.createBufferSource();
       node.buffer = buf;
       node.connect(this.audioCtx.destination);
 
-      // Schedule back-to-back chunks seamlessly
       const now = this.audioCtx.currentTime;
       const t   = Math.max(now + 0.01, this.nextPlayAt);
       node.start(t);
       this.nextPlayAt = t + buf.duration;
-
       node.onended = () => {
         if (this.nextPlayAt <= this.audioCtx.currentTime + 0.1)
           this.cb.onModeChange?.({ mode: 'listening' });
@@ -4077,13 +4086,13 @@ class ElevenLabsConv {
   setMicrophoneVolume(v) { this.muted = v === 0; }
 
   async endSession() {
-    try { this.ws?.close(); }           catch(e) {}
+    try { this.ws?.close(); }              catch(e) {}
     this.ws = null;
     try { this.scriptNode?.disconnect(); } catch(e) {}
     this.scriptNode = null;
     this.micStream?.getTracks().forEach(t => t.stop());
     this.micStream = null;
-    try { await this.audioCtx?.close(); } catch(e) {}
+    try { await this.audioCtx?.close(); }  catch(e) {}
     this.audioCtx = null;
     this.nextPlayAt = 0;
   }
@@ -4152,38 +4161,41 @@ window.openModal = function(id) {
   if (id === 'agents-modal') renderAgentsList();
 };
 
-// ── Character editor: load/save agentId ─────────────────────
-// Patch openCharEditor to load agentId
+// ── Character editor: load/save agentId + voiceId ────────────
+// Patch openCharEditor to load agentId & voiceId
 const _origOpenCharEditor = window.openCharEditor;
 window.openCharEditor = function(id) {
   _origOpenCharEditor(id);
-  // Fill agent ID if character has one
-  const el = document.getElementById('char-agent-id-input');
-  if (!el) return;
+  const agentEl = document.getElementById('char-agent-id-input');
+  const voiceEl = document.getElementById('char-voice-id-input');
+  if (!agentEl) return;
   if (id) {
     const char = characters.find(c => c.id === id);
-    el.value = char?.agentId || '';
+    agentEl.value = char?.agentId || '';
+    if (voiceEl) voiceEl.value = char?.voiceId || '';
   } else {
-    el.value = '';
+    agentEl.value = '';
+    if (voiceEl) voiceEl.value = '';
   }
 };
 
-// Patch saveCharacter to also save agentId
+// Patch saveCharacter to also save agentId & voiceId
 const _origSaveCharacter = window.saveCharacter;
 window.saveCharacter = function() {
   _origSaveCharacter();
-  // Re-apply agentId since _origSaveCharacter already saved without it
-  const idEl = document.getElementById('char-editor-id');
+  const idEl    = document.getElementById('char-editor-id');
   const agentEl = document.getElementById('char-agent-id-input');
+  const voiceEl = document.getElementById('char-voice-id-input');
   if (!idEl || !agentEl) return;
-  const charId = idEl.value;
+  const charId  = idEl.value;
   const agentId = agentEl.value.trim();
+  const voiceId = voiceEl?.value.trim() || '';
   if (!charId) return;
   const char = characters.find(c => c.id === charId);
   if (!char) return;
   char.agentId = agentId || null;
+  char.voiceId = voiceId || null;
   saveCharacters();
-  // Update the call button visibility if this is current char
   refreshVcallBtn();
 };
 
@@ -4243,11 +4255,8 @@ async function startVoiceCall() {
 
   try {
     setVcallStatus('connecting', 'Meminta izin mikrofon...');
-
-    // Get mic permission early so user sees the browser prompt before we connect
     await navigator.mediaDevices.getUserMedia({ audio: true });
 
-    // Get signed URL if API key is available (private agent), else use public agentId
     let signedUrl = null;
     if (elevenLabsKey) {
       try {
@@ -4270,8 +4279,9 @@ async function startVoiceCall() {
     setVcallStatus('connecting', 'Menghubungkan ke agent...');
 
     vcall.conversation = await new ElevenLabsConv().startSession({
-      agentId: char.agentId,
+      agentId:   char.agentId,
       signedUrl,
+      voiceId:   char.voiceId || null,
 
       onConnect: () => {
         setVcallStatus('connected', 'Terhubung');
