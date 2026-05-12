@@ -1002,7 +1002,7 @@ textarea.form-input{resize:vertical;min-height:80px;line-height:1.5}
     </div>
 
     <!-- FOLLOW-UP ENGINE CONFIG -->
-    <div class="followup-section">
+    <div class="followup-section" style="display:none">
       <div class="followup-section-title">⏱️ Auto Follow-Up Engine</div>
       <div class="followup-row">
         <div class="followup-label">
@@ -1098,23 +1098,23 @@ const followUpEngine = {
 
   schedule(charId, lastAiContent) {
     const char = characters.find(c => c.id === charId);
-    const cfg = char?.followUp;
-    if (!cfg?.enabled) return;
+    if (!char) return;
 
     this._clear(charId);
     if (!this.timers[charId]) this.timers[charId] = {};
 
     const cnt = this.timers[charId].count || 0;
-    const max = parseInt(cfg.maxFollowUps) || 3;
+    const max = parseInt(char?.followUp?.maxFollowUps) || 3;
     if (cnt >= max) return;
 
-    const rel = cfg.relationship || 'casual';
+    // Auto-detect hubungan dari karakter
+    const detected = autoDetectFollowUpConfig(char);
+    const rel = detected.relationship;
     const demoKey = rel + '_demo';
     const key = this.isDemoMode ? demoKey : rel;
     const delays = this.DELAYS[key] || this.DELAYS.casual;
     const baseDelay = delays[Math.min(cnt, delays.length - 1)];
 
-    // Shorten delay if AI's last message had a question
     const hasQ = /\?/.test(lastAiContent);
     const adjusted = hasQ ? baseDelay * 0.65 : baseDelay;
 
@@ -1122,10 +1122,8 @@ const followUpEngine = {
     this.timers[charId].pendingAt = fireAt;
     this.timers[charId].contextMsg = lastAiContent;
 
-    this._showPendingIndicator(charId, char, adjusted, cnt);
-
+    // Tidak tampilkan indikator — follow-up berjalan diam-diam
     this.timers[charId].timer = setTimeout(async () => {
-      this._hidePendingIndicator();
       await this._fire(charId, cnt);
     }, adjusted);
   },
@@ -1170,27 +1168,7 @@ const followUpEngine = {
   },
 
   _showPendingIndicator(charId, char, delayMs, idx) {
-    const el = document.getElementById('pending-followup-indicator');
-    const textEl = document.getElementById('pending-followup-text');
-    const iconEl = document.getElementById('pending-followup-icon');
-    if (!el || currentCharId !== charId) return;
-    const secs = Math.round(delayMs / 1000);
-    const timeStr = secs < 60 ? `${secs} detik` : `${Math.round(secs/60)} menit`;
-    const cfg = char?.followUp;
-    const personality = cfg?.personality || 'caring';
-    const icons = { curious:'🤔', caring:'🥺', clingy:'💕', chill:'😎' };
-    iconEl.textContent = icons[personality] || '💬';
-    textEl.textContent = `${char.name} akan mengirim pesan dalam ~${timeStr}`;
-    el.style.display = 'flex';
-    // Auto-update countdown
-    if (this._countdownInterval) clearInterval(this._countdownInterval);
-    const fireAt = Date.now() + delayMs;
-    this._countdownInterval = setInterval(() => {
-      const rem = Math.max(0, Math.round((fireAt - Date.now()) / 1000));
-      if (rem <= 0) { clearInterval(this._countdownInterval); return; }
-      const t = rem < 60 ? `${rem} detik` : `${Math.round(rem/60)} menit`;
-      textEl.textContent = `${char.name} akan mengirim pesan dalam ~${t}`;
-    }, 1000);
+    // Disembunyikan — follow-up berjalan diam-diam agar terasa natural
   },
 
   _hidePendingIndicator() {
@@ -1208,8 +1186,9 @@ async function generateFollowUp(charId, followUpIndex) {
   if (!char || !apiKey) return;
 
   const cfg = char.followUp || {};
-  const personality = cfg.personality || 'caring';
-  const relationship = cfg.relationship || 'casual';
+  const detected     = autoDetectFollowUpConfig(char);
+  const personality  = detected.personality;
+  const relationship = detected.relationship;
   const msgs = char.messages || [];
 
   // Build context of recent conversation
@@ -1315,6 +1294,48 @@ ATURAN PENTING:
     setCharStatus('online');
     console.warn('Follow-up generation failed:', err);
   }
+}
+
+// ============================================================
+// AUTO-DETECT FOLLOW-UP CONFIG
+// Deteksi hubungan & kepribadian dari system prompt + riwayat chat
+// ============================================================
+function autoDetectFollowUpConfig(char) {
+  const prompt   = (char.prompt   || '').toLowerCase();
+  const greeting = (char.greeting || '').toLowerCase();
+  const msgs     = (char.messages || []);
+
+  // Ambil 6 pesan AI terakhir sebagai konteks perasaan
+  const recentAI = msgs
+    .filter(m => m.role === 'ai')
+    .slice(-6)
+    .map(m => m.content)
+    .join(' ')
+    .toLowerCase();
+
+  const combined = prompt + ' ' + greeting + ' ' + recentAI;
+
+  // ── Deteksi Jenis Hubungan ──────────────────────────────
+  let relationship = 'casual';
+  if (/pacar|kekasih|sayang|cinta|boyfriend|girlfriend|babe|baby|honey|darling|dear|jagoan|jantung|belahan/.test(combined)) {
+    relationship = 'pacar';
+  } else if (/sahabat|bestie|teman dekat|sobat|bestfriend|best friend|akrab|udah lama/.test(combined)) {
+    relationship = 'sahabat';
+  }
+
+  // ── Deteksi Kepribadian Follow-Up ──────────────────────
+  let personality = 'caring';
+  if (/manja|kangen|clingy|nunggu|kamu mana|kemana|rindu|pengen deket|selalu ada/.test(combined)) {
+    personality = 'clingy';
+  } else if (/penasaran|curious|ingin tahu|rasa ingin|kenapa|gimana bisa|bagaimana/.test(combined)) {
+    personality = 'curious';
+  } else if (/santai|chill|biasa aja|no worries|relax|easygoing|bodo amat/.test(combined)) {
+    personality = 'chill';
+  } else if (/peduli|perhatian|caring|khawatir|semoga baik|jaga diri|hati-hati/.test(combined)) {
+    personality = 'caring';
+  }
+
+  return { relationship, personality };
 }
 
 // ============================================================
@@ -1555,7 +1576,28 @@ function loadSettings() {
   try {
     const c = localStorage.getItem('nc-characters');
     characters = c ? JSON.parse(c) : null;
-    if (!characters || characters.length === 0) initDefaultCharacters();
+    if (!characters || characters.length === 0) {
+      initDefaultCharacters();
+    } else {
+      // Migrasi: aktifkan follow-up di semua karakter yang sudah ada
+      let migrated = false;
+      characters = characters.map(char => {
+        if (!char.followUp || !char.followUp.enabled) {
+          migrated = true;
+          return {
+            ...char,
+            followUp: {
+              enabled: true,
+              relationship: char.followUp?.relationship || 'auto',
+              personality:  char.followUp?.personality  || 'auto',
+              maxFollowUps: char.followUp?.maxFollowUps  || 3,
+            }
+          };
+        }
+        return char;
+      });
+      if (migrated) saveCharacters();
+    }
   } catch(e){ initDefaultCharacters(); }
 
   // Sync UI
@@ -2537,14 +2579,7 @@ function openCharEditor(id) {
     document.getElementById('char-greeting-input').value = '';
     document.getElementById('char-model-input').value = 'google/gemini-2.0-flash-001';
     charEditorCurrentEmoji = '🤖';
-    // Reset follow-up
-    const toggleEl = document.getElementById('toggle-followup');
-    const fields = document.getElementById('followup-config-fields');
-    toggleEl.classList.remove('on');
-    fields.style.opacity = '0.4';
-    fields.style.pointerEvents = 'none';
-    document.getElementById('char-followup-rel').value = 'casual';
-    document.getElementById('char-followup-personality').value = 'caring';
+    // Follow-up selalu aktif untuk karakter baru
     document.getElementById('char-followup-max').value = '3';
   }
 
@@ -2595,11 +2630,10 @@ function saveCharacter() {
   const id = document.getElementById('char-editor-id').value || generateId();
   const existing = characters.find(c => c.id === id);
 
-  const followUpEnabled = document.getElementById('toggle-followup').classList.contains('on');
   const followUpConfig = {
-    enabled: followUpEnabled,
-    relationship: document.getElementById('char-followup-rel').value,
-    personality: document.getElementById('char-followup-personality').value,
+    enabled: true,  // Selalu aktif otomatis
+    relationship: 'auto',
+    personality:  'auto',
     maxFollowUps: parseInt(document.getElementById('char-followup-max').value) || 3,
   };
 
@@ -3565,14 +3599,15 @@ followUpEngine._fire = async function(charId, index) {
 async function _ncScheduleServerFollowUp(charId, lastAiContent) {
   if (!apiKey) return;
   const char = characters.find(c => c.id === charId);
-  if (!char?.followUp?.enabled) return;
+  if (!char) return;
 
-  const cfg   = char.followUp;
-  const rel   = cfg.relationship || 'casual';
+  // Auto-detect hubungan & kepribadian dari konteks karakter
+  const detected = autoDetectFollowUpConfig(char);
+  const rel      = detected.relationship;
   const isDemoMode = followUpEngine.isDemoMode;
   const delays = followUpEngine.DELAYS[(isDemoMode ? rel + '_demo' : rel)] || followUpEngine.DELAYS.casual;
-  const cnt   = followUpEngine.timers[charId]?.count || 0;
-  const base  = delays[Math.min(cnt, delays.length - 1)];
+  const cnt    = followUpEngine.timers[charId]?.count || 0;
+  const base   = delays[Math.min(cnt, delays.length - 1)];
   const delayMs = /\?/.test(lastAiContent) ? Math.round(base * 0.65) : base;
 
   try {
@@ -3592,8 +3627,8 @@ async function _ncScheduleServerFollowUp(charId, lastAiContent) {
         systemPrompt: char.prompt || '',
         delayMs,
         followupIndex: cnt,
-        relationship:  cfg.relationship || 'casual',
-        personality:   cfg.personality  || 'caring',
+        relationship:  detected.relationship,
+        personality:   detected.personality,
         apiKey,
         model: char.model || 'google/gemini-2.0-flash-001',
       }),
