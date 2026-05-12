@@ -137,6 +137,63 @@ html{height:100%;height:100dvh}
 .multi-bubble-gap{height:6px}
 .bubble.followup-msg{border-left:2px solid rgba(124,111,247,.4)}
 
+/* ── VOICE CALL OVERLAY ──────────────────────────────────── */
+.vcall-overlay{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(5,5,10,.95);backdrop-filter:blur(24px)}
+.vcall-overlay.active{display:flex}
+.vcall-card{display:flex;flex-direction:column;align-items:center;gap:0;width:100%;max-width:360px;padding:40px 24px 32px;position:relative;text-align:center}
+.vcall-bg-rings{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:32px}
+.vcall-ring{position:absolute;border-radius:50%;border:1px solid rgba(124,111,247,.15);top:50%;left:50%;transform:translate(-50%,-50%);animation:vcRingPulse 2.5s ease-out infinite}
+.vcall-ring:nth-child(1){width:220px;height:220px;animation-delay:0s}
+.vcall-ring:nth-child(2){width:300px;height:300px;animation-delay:.6s}
+.vcall-ring:nth-child(3){width:380px;height:380px;animation-delay:1.2s}
+@keyframes vcRingPulse{0%{opacity:.6;transform:translate(-50%,-50%) scale(.9)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15)}}
+.vcall-avatar-wrap{position:relative;width:112px;height:112px;margin-bottom:20px;flex-shrink:0}
+.vcall-avatar{width:112px;height:112px;border-radius:28px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:48px;background:var(--bg3);border:3px solid rgba(124,111,247,.4);box-shadow:0 0 0 0 rgba(124,111,247,.5);transition:box-shadow .3s}
+.vcall-avatar img{width:100%;height:100%;object-fit:cover}
+.vcall-avatar.speaking{animation:vcAvatarSpeak 1s ease-in-out infinite;box-shadow:0 0 0 10px rgba(124,111,247,.25),0 0 0 24px rgba(124,111,247,.1)}
+.vcall-avatar.listening{box-shadow:0 0 0 8px rgba(52,211,153,.2),0 0 0 20px rgba(52,211,153,.08)}
+@keyframes vcAvatarSpeak{0%,100%{box-shadow:0 0 0 8px rgba(124,111,247,.3),0 0 0 20px rgba(124,111,247,.1)}50%{box-shadow:0 0 0 16px rgba(124,111,247,.25),0 0 0 32px rgba(124,111,247,.08)}}
+.vcall-name{font-family:var(--font-display);font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.5px}
+.vcall-status{font-size:13px;color:var(--text2);min-height:20px;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px}
+.vcall-status .vc-dot{width:7px;height:7px;border-radius:50%;background:var(--success);animation:pulse 1.5s infinite}
+.vcall-status.connecting .vc-dot{background:var(--warning)}
+.vcall-status.ended .vc-dot{background:var(--danger);animation:none}
+.vcall-timer{font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--accent3);margin-bottom:24px;letter-spacing:.5px;opacity:0;transition:opacity .4s}
+.vcall-timer.visible{opacity:1}
+.vcall-waveform{display:flex;align-items:center;justify-content:center;gap:4px;height:40px;margin-bottom:28px}
+.vcall-bar{width:4px;border-radius:99px;background:var(--accent);transition:height .1s ease;min-height:4px}
+.vcall-transcript{width:100%;max-height:80px;overflow-y:auto;margin-bottom:20px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;font-size:12.5px;color:var(--text2);line-height:1.55;text-align:left;display:none}
+.vcall-transcript.visible{display:block}
+.vcall-transcript .vc-turn{margin-bottom:4px}
+.vcall-transcript .vc-turn.agent{color:var(--accent3)}
+.vcall-transcript .vc-turn.user{color:var(--text)}
+.vcall-actions{display:flex;align-items:center;justify-content:center;gap:20px}
+.vcall-btn{width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;transition:all .2s}
+.vcall-btn-mute{background:rgba(255,255,255,.1);color:#fff}
+.vcall-btn-mute:hover{background:rgba(255,255,255,.18)}
+.vcall-btn-mute.muted{background:rgba(248,113,113,.2);color:var(--danger)}
+.vcall-btn-end{width:68px;height:68px;background:#ef4444;color:#fff;box-shadow:0 4px 20px rgba(239,68,68,.4)}
+.vcall-btn-end:hover{background:#dc2626;transform:scale(1.05)}
+.vcall-btn-transcript{background:rgba(255,255,255,.1);color:var(--text2)}
+.vcall-btn-transcript:hover{background:rgba(255,255,255,.18);color:#fff}
+.vcall-btn-transcript.active{background:rgba(124,111,247,.2);color:var(--accent3)}
+.vcall-error{font-size:12px;color:var(--danger);margin-top:12px;display:none;padding:8px 14px;background:rgba(248,113,113,.1);border-radius:8px;border:1px solid rgba(248,113,113,.2)}
+.vcall-error.visible{display:block}
+
+/* ── AGENTS MANAGER MODAL ─────────────────────────────────── */
+.agents-list{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;padding-right:4px}
+.agent-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;transition:border-color .15s}
+.agent-item:hover{border-color:var(--border2)}
+.agent-item-info{flex:1;overflow:hidden}
+.agent-item-name{font-size:13px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-item-id{font-size:10.5px;color:var(--text3);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-item-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:4px 7px;border-radius:6px;transition:all .15s;flex-shrink:0}
+.agent-item-del:hover{background:rgba(248,113,113,.15);color:var(--danger)}
+.agents-empty{text-align:center;padding:28px 0;font-size:13px;color:var(--text3)}
+.agent-form{display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-top:4px}
+.agent-form-row{display:flex;gap:8px}
+.agent-form-row .form-input{flex:1;font-size:12.5px;padding:7px 10px}
+
 /* CHAT AREA */
 .chat-area{flex:1;overflow-y:auto;padding:24px 0;display:flex;flex-direction:column;min-height:0}
 .welcome-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center}
@@ -591,6 +648,7 @@ textarea.form-input{resize:vertical;min-height:80px;line-height:1.5}
         </div>
         <div class="header-spacer"></div>
         <button class="header-btn" onclick="editCurrentChar()" title="Edit">✏️</button>
+        <button class="header-btn" id="vcall-header-btn" onclick="startVoiceCall()" title="Voice Call" style="display:none">📞</button>
         <button class="header-btn" onclick="clearCharChat()" title="Hapus percakapan">🗑️</button>
         <button class="header-btn" title="Chat AI vs AI" onclick="openAi2AiModal()">🤝</button>
         <button class="header-btn" onclick="backToCharGrid()" title="Kembali">←</button>
@@ -872,8 +930,38 @@ textarea.form-input{resize:vertical;min-height:80px;line-height:1.5}
         <label class="form-label">Nama Pengguna (opsional)</label>
         <input type="text" id="username-input" class="form-input" placeholder="Nama Anda" />
       </div>
+
+      <!-- ElevenLabs section -->
+      <div style="height:1px;background:var(--border);margin:4px 0 12px"></div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--accent3);margin-bottom:10px;display:flex;align-items:center;gap:7px">
+        🎙️ ElevenLabs — Voice Call
+      </div>
+      <div class="form-group">
+        <label class="form-label">ElevenLabs API Key
+          <span style="font-size:10px;color:var(--text3);font-weight:400;margin-left:4px">— diperlukan untuk private agent</span>
+        </label>
+        <div class="input-with-btn">
+          <input type="password" id="elevenlabs-key-input" class="form-input" placeholder="sk_xxxxxxxxxxxxxxxx..." />
+          <button class="input-eye-btn" onclick="toggleElKey()">👁</button>
+        </div>
+        <div style="margin-top:6px;font-size:11px;color:var(--text3)">
+          Dapatkan API key di <a href="https://elevenlabs.io/app/speech-synthesis/api" target="_blank" style="color:var(--accent3)">elevenlabs.io → Profile → API Keys</a>
+        </div>
+      </div>
+      <div style="padding:10px 12px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);font-size:11.5px;color:var(--text2);line-height:1.6">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span id="el-status-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;display:inline-block"></span>
+          <span id="el-status-text" style="color:var(--text3)">Belum dikonfigurasi</span>
+        </div>
+        <div style="font-size:10.5px;color:var(--text3);line-height:1.5">
+          🔓 <strong>Tanpa API key</strong> → hanya agent <em>public</em> yang bisa digunakan<br>
+          🔐 <strong>Dengan API key</strong> → semua agent (public &amp; private) bisa diakses via signed URL
+        </div>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin:12px 0 8px"></div>
       <div style="padding:12px;background:var(--bg3);border-radius:10px">
-        <div class="info-row"><span class="info-label">Status</span><span class="info-val" id="api-status">⚫ Belum dikonfigurasi</span></div>
+        <div class="info-row"><span class="info-label">Status OpenRouter</span><span class="info-val" id="api-status">⚫ Belum dikonfigurasi</span></div>
         <div class="info-row"><span class="info-label">Total pesan</span><span class="info-val" id="total-msgs">0</span></div>
         <div class="info-row"><span class="info-label">Total token (est.)</span><span class="info-val" id="total-tokens-stat">0</span></div>
       </div>
@@ -1000,6 +1088,14 @@ textarea.form-input{resize:vertical;min-height:80px;line-height:1.5}
         <option value="meta-llama/llama-3.1-70b-instruct">Llama 3.1 70B</option>
       </select>
     </div>
+    <div class="form-group">
+      <label class="form-label">🎙️ ElevenLabs Agent ID <span style="font-size:10px;color:var(--text3);font-weight:400">(opsional — untuk Voice Call)</span></label>
+      <div class="input-with-btn">
+        <input type="text" id="char-agent-id-input" class="form-input" placeholder="agent_xxxxxxxxxxxxxxxx" style="font-family:monospace;font-size:12.5px" />
+        <button class="input-eye-btn" title="Kelola daftar agent" onclick="openModal('agents-modal')" style="font-size:14px">🗂️</button>
+      </div>
+      <div style="font-size:10.5px;color:var(--text3);margin-top:5px">Buat agent di <a href="https://elevenlabs.io/app/conversational-ai" target="_blank" style="color:var(--accent3)">elevenlabs.io/app/conversational-ai</a> · Karakter memerlukan Agent ID agar tombol 📞 muncul</div>
+    </div>
 
     <!-- FOLLOW-UP ENGINE CONFIG -->
     <div class="followup-section" style="display:none">
@@ -1052,6 +1148,74 @@ textarea.form-input{resize:vertical;min-height:80px;line-height:1.5}
       <button class="btn btn-ghost" onclick="closeModal('char-editor-modal')">Batal</button>
       <button class="btn btn-danger" id="char-delete-btn" style="display:none" onclick="deleteCurrentEditChar()">🗑️ Hapus</button>
       <button class="btn btn-primary" onclick="saveCharacter()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- VOICE CALL OVERLAY -->
+<div class="vcall-overlay" id="vcall-overlay">
+  <div class="vcall-card">
+    <div class="vcall-bg-rings">
+      <div class="vcall-ring"></div>
+      <div class="vcall-ring"></div>
+      <div class="vcall-ring"></div>
+    </div>
+    <div class="vcall-avatar-wrap">
+      <div class="vcall-avatar" id="vcall-avatar">🤖</div>
+    </div>
+    <div class="vcall-name" id="vcall-char-name">Karakter</div>
+    <div class="vcall-status connecting" id="vcall-status">
+      <span class="vc-dot"></span>
+      <span id="vcall-status-text">Menghubungkan...</span>
+    </div>
+    <div class="vcall-timer" id="vcall-timer">00:00</div>
+    <div class="vcall-waveform" id="vcall-waveform">
+      <div class="vcall-bar" style="height:8px"></div>
+      <div class="vcall-bar" style="height:14px"></div>
+      <div class="vcall-bar" style="height:24px"></div>
+      <div class="vcall-bar" style="height:16px"></div>
+      <div class="vcall-bar" style="height:10px"></div>
+      <div class="vcall-bar" style="height:20px"></div>
+      <div class="vcall-bar" style="height:8px"></div>
+      <div class="vcall-bar" style="height:18px"></div>
+      <div class="vcall-bar" style="height:12px"></div>
+    </div>
+    <div class="vcall-transcript" id="vcall-transcript"></div>
+    <div class="vcall-error" id="vcall-error"></div>
+    <div class="vcall-actions">
+      <button class="vcall-btn vcall-btn-transcript" id="vcall-transcript-btn" onclick="toggleVcallTranscript()" title="Transkrip">📝</button>
+      <button class="vcall-btn vcall-btn-end" onclick="endVoiceCall()" title="Tutup panggilan">📵</button>
+      <button class="vcall-btn vcall-btn-mute" id="vcall-mute-btn" onclick="toggleVcallMute()" title="Mute">🎤</button>
+    </div>
+  </div>
+</div>
+
+<!-- AGENTS MANAGER MODAL -->
+<div class="modal-overlay" id="agents-modal" onclick="if(event.target===this)closeModal('agents-modal')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">🗂️ Kelola ElevenLabs Agents</div>
+      <button class="modal-close" onclick="closeModal('agents-modal')">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
+      <p style="font-size:12.5px;color:var(--text2)">Simpan daftar Agent ID ElevenLabs yang sering digunakan. Klik nama agent untuk mengisi otomatis ke karakter yang sedang diedit.</p>
+      <div id="agents-list-container"></div>
+      <div class="agent-form" id="agent-add-form">
+        <div style="font-size:11px;font-weight:600;color:var(--accent3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px">+ Tambah Agent Baru</div>
+        <div class="agent-form-row">
+          <input type="text" class="form-input" id="new-agent-name" placeholder="Nama Agent (mis: Luna Voice)" />
+        </div>
+        <div class="agent-form-row">
+          <input type="text" class="form-input" id="new-agent-id" placeholder="agent_xxxxxxxxxxxxxxxx" style="font-family:monospace;font-size:12px" />
+          <button class="btn btn-primary" style="font-size:12px;padding:7px 14px;white-space:nowrap" onclick="addSavedAgent()">Simpan</button>
+        </div>
+      </div>
+      <div style="font-size:10.5px;color:var(--text3);padding:8px 10px;background:var(--bg3);border-radius:8px;line-height:1.6">
+        💡 <strong style="color:var(--text2)">Cara membuat Agent:</strong> Buka <a href="https://elevenlabs.io/app/conversational-ai" target="_blank" style="color:var(--accent3)">ElevenLabs Conversational AI</a> → Create Agent → Pilih suara & konfigurasi → Copy Agent ID
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('agents-modal')">Tutup</button>
     </div>
   </div>
 </div>
@@ -1394,6 +1558,7 @@ function cancelPendingFollowUp() {
 // ============================================================
 let currentMode = 'chat';
 let apiKey = '';
+let elevenLabsKey = '';
 let selectedModel = 'google/gemini-2.0-flash-001';
 let messages = [];
 let chats = [];
@@ -1561,6 +1726,7 @@ function loadSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('nc-settings') || '{}');
     apiKey = s.apiKey || '';
+    elevenLabsKey = s.elevenLabsKey || '';
     selectedModel = s.selectedModel || 'google/gemini-2.0-flash-001';
     systemPrompt = s.systemPrompt || '';
     settings.temperature = s.temperature ?? 0.7;
@@ -1602,6 +1768,7 @@ function loadSettings() {
 
   // Sync UI
   document.getElementById('api-key-input').value = apiKey;
+  document.getElementById('elevenlabs-key-input').value = elevenLabsKey;
   document.getElementById('temp-slider').value = settings.temperature;
   document.getElementById('maxtok-slider').value = settings.maxTokens;
   document.getElementById('temp-display').textContent = settings.temperature;
@@ -1627,7 +1794,7 @@ function initDefaultCharacters() {
 
 function saveSettings() {
   localStorage.setItem('nc-settings', JSON.stringify({
-    apiKey, selectedModel, systemPrompt,
+    apiKey, selectedModel, systemPrompt, elevenLabsKey,
     temperature: settings.temperature, maxTokens: settings.maxTokens,
     streaming: settings.streaming, markdown: settings.markdown,
     saveHistory: settings.saveHistory, totalTokens, totalMsgs
@@ -3048,6 +3215,7 @@ function removeAttachment() {
 // ============================================================
 function saveSettingsModal() {
   apiKey = document.getElementById('api-key-input').value.trim();
+  elevenLabsKey = document.getElementById('elevenlabs-key-input').value.trim();
   settings.temperature = parseFloat(document.getElementById('temp-slider').value);
   settings.maxTokens = parseInt(document.getElementById('maxtok-slider').value);
   settings.streaming = document.getElementById('toggle-stream').classList.contains('on');
@@ -3072,6 +3240,7 @@ function saveSystemPrompt() {
 
 function setSystemPrompt(text) { document.getElementById('system-prompt-input').value = text; }
 function toggleApiKeyVisibility() { const i=document.getElementById('api-key-input'); i.type=i.type==='password'?'text':'password'; }
+function toggleElKey() { const i=document.getElementById('elevenlabs-key-input'); i.type=i.type==='password'?'text':'password'; }
 function toggleSetting(el) { el.classList.toggle('on'); }
 
 function switchTab(name) {
@@ -3098,6 +3267,21 @@ function updateStats() {
   document.getElementById('api-status').textContent = apiKey ? '🟢 Terkonfigurasi' : '⚫ Belum dikonfigurasi';
   document.getElementById('total-msgs').textContent = totalMsgs;
   document.getElementById('total-tokens-stat').textContent = totalTokens.toLocaleString();
+  // ElevenLabs status
+  const dot = document.getElementById('el-status-dot');
+  const txt = document.getElementById('el-status-text');
+  if (dot && txt) {
+    if (elevenLabsKey) {
+      dot.style.background = 'var(--success)';
+      txt.style.color = 'var(--success)';
+      txt.textContent = '🔐 API Key terkonfigurasi — private & public agent aktif';
+    } else {
+      dot.style.background = 'var(--warning)';
+      txt.style.color = 'var(--warning)';
+      txt.textContent = '🔓 Tanpa API key — hanya public agent';
+    }
+  }
+}
 }
 
 // ============================================================
@@ -3764,8 +3948,399 @@ async function ncInitPushNotifications() {
 }
 
 // ============================================================
-// SERVER INIT — called after init()
+// VOICE CALL — ElevenLabs Conversational AI (WebRTC)
 // ============================================================
+
+// ── State ────────────────────────────────────────────────────
+let vcall = {
+  active: false,
+  conversation: null,    // ElevenLabs Conversation object
+  muted: false,
+  showTranscript: false,
+  timerInterval: null,
+  waveInterval: null,
+  startedAt: null,
+  charId: null,
+};
+
+// ── Saved Agents (localStorage) ──────────────────────────────
+function getSavedAgents() {
+  try { return JSON.parse(localStorage.getItem('nc-agents') || '[]'); } catch(e){ return []; }
+}
+function saveSavedAgents(list) {
+  localStorage.setItem('nc-agents', JSON.stringify(list));
+}
+
+function addSavedAgent() {
+  const name = document.getElementById('new-agent-name').value.trim();
+  const id   = document.getElementById('new-agent-id').value.trim();
+  if (!name || !id) { toast('Isi nama dan Agent ID dulu!', 'error'); return; }
+  if (!id.startsWith('agent_')) { toast('Agent ID harus diawali "agent_"', 'error'); return; }
+  const list = getSavedAgents();
+  if (list.find(a => a.id === id)) { toast('Agent ID sudah tersimpan', 'warning'); return; }
+  list.unshift({ name, id, savedAt: Date.now() });
+  saveSavedAgents(list);
+  document.getElementById('new-agent-name').value = '';
+  document.getElementById('new-agent-id').value = '';
+  renderAgentsList();
+  toast(`Agent "${name}" disimpan!`, 'success');
+}
+
+function deleteSavedAgent(id) {
+  const list = getSavedAgents().filter(a => a.id !== id);
+  saveSavedAgents(list);
+  renderAgentsList();
+}
+
+function pickSavedAgent(agentId) {
+  // Fill into the currently open char editor
+  const input = document.getElementById('char-agent-id-input');
+  if (input) { input.value = agentId; toast('Agent ID dipilih ✓', 'success'); }
+  closeModal('agents-modal');
+}
+
+function renderAgentsList() {
+  const container = document.getElementById('agents-list-container');
+  if (!container) return;
+  const list = getSavedAgents();
+  if (list.length === 0) {
+    container.innerHTML = '<div class="agents-empty">Belum ada agent tersimpan.<br>Tambah agent di bawah.</div>';
+    return;
+  }
+  container.innerHTML = '<div class="agents-list">' + list.map(a => `
+    <div class="agent-item">
+      <div style="width:32px;height:32px;border-radius:8px;background:rgba(124,111,247,.15);border:1px solid rgba(124,111,247,.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🎙️</div>
+      <div class="agent-item-info" style="cursor:pointer" onclick="pickSavedAgent('${escHtml(a.id)}')">
+        <div class="agent-item-name">${escHtml(a.name)}</div>
+        <div class="agent-item-id">${escHtml(a.id)}</div>
+      </div>
+      <button class="agent-item-del" onclick="deleteSavedAgent('${escHtml(a.id)}')" title="Hapus">🗑️</button>
+    </div>
+  `).join('') + '</div>';
+}
+
+// Patch openModal to render agents list when opening agents-modal
+const _origOpenModal = window.openModal;
+window.openModal = function(id) {
+  _origOpenModal(id);
+  if (id === 'agents-modal') renderAgentsList();
+};
+
+// ── Character editor: load/save agentId ─────────────────────
+// Patch openCharEditor to load agentId
+const _origOpenCharEditor = window.openCharEditor;
+window.openCharEditor = function(id) {
+  _origOpenCharEditor(id);
+  // Fill agent ID if character has one
+  const el = document.getElementById('char-agent-id-input');
+  if (!el) return;
+  if (id) {
+    const char = characters.find(c => c.id === id);
+    el.value = char?.agentId || '';
+  } else {
+    el.value = '';
+  }
+};
+
+// Patch saveCharacter to also save agentId
+const _origSaveCharacter = window.saveCharacter;
+window.saveCharacter = function() {
+  _origSaveCharacter();
+  // Re-apply agentId since _origSaveCharacter already saved without it
+  const idEl = document.getElementById('char-editor-id');
+  const agentEl = document.getElementById('char-agent-id-input');
+  if (!idEl || !agentEl) return;
+  const charId = idEl.value;
+  const agentId = agentEl.value.trim();
+  if (!charId) return;
+  const char = characters.find(c => c.id === charId);
+  if (!char) return;
+  char.agentId = agentId || null;
+  saveCharacters();
+  // Update the call button visibility if this is current char
+  refreshVcallBtn();
+};
+
+function refreshVcallBtn() {
+  const btn = document.getElementById('vcall-header-btn');
+  if (!btn) return;
+  const char = characters.find(c => c.id === currentCharId);
+  btn.style.display = (char?.agentId) ? 'flex' : 'none';
+}
+
+// Also patch selectCharacter to refresh button
+const _origSelectChar2 = window.selectCharacter;
+window.selectCharacter = function(id) {
+  _origSelectChar2(id);
+  setTimeout(refreshVcallBtn, 100);
+};
+
+// ── Voice Call Core ──────────────────────────────────────────
+async function startVoiceCall() {
+  const char = characters.find(c => c.id === currentCharId);
+  if (!char?.agentId) {
+    toast('Karakter ini belum punya Agent ID ElevenLabs', 'error');
+    return;
+  }
+
+  if (vcall.active) { toast('Panggilan sedang berlangsung', 'warning'); return; }
+
+  // Show overlay
+  const overlay = document.getElementById('vcall-overlay');
+  overlay.classList.add('active');
+  vcall.active = true;
+  vcall.charId = currentCharId;
+  vcall.muted = false;
+  vcall.showTranscript = false;
+  vcall.startedAt = null;
+
+  // Set avatar & name
+  const avatarEl = document.getElementById('vcall-avatar');
+  if (char.avatarImg) {
+    avatarEl.innerHTML = `<img src="${escHtml(char.avatarImg)}" style="width:100%;height:100%;object-fit:cover"/>`;
+  } else {
+    avatarEl.textContent = char.avatar || '🤖';
+    avatarEl.innerHTML = `<span style="font-size:48px">${char.avatar || '🤖'}</span>`;
+  }
+  document.getElementById('vcall-char-name').textContent = char.name;
+  setVcallStatus('connecting', 'Menghubungkan...');
+  document.getElementById('vcall-timer').classList.remove('visible');
+  document.getElementById('vcall-transcript').innerHTML = '';
+  document.getElementById('vcall-transcript').classList.remove('visible');
+  document.getElementById('vcall-error').classList.remove('visible');
+  document.getElementById('vcall-mute-btn').textContent = '🎤';
+  document.getElementById('vcall-mute-btn').classList.remove('muted');
+  document.getElementById('vcall-transcript-btn').classList.remove('active');
+  avatarEl.className = 'vcall-avatar';
+
+  startVcallWaveform(false);
+
+  try {
+    // Dynamically import ElevenLabs SDK via CDN (ESM)
+    if (!window._elevenlabsSDK) {
+      setVcallStatus('connecting', 'Memuat SDK...');
+      const mod = await import('https://cdn.jsdelivr.net/npm/@11labs/client@latest/dist/index.esm.js');
+      window._elevenlabsSDK = mod;
+    }
+
+    const { Conversation } = window._elevenlabsSDK;
+
+    setVcallStatus('connecting', 'Meminta izin mikrofon...');
+    // Request mic permission first
+    await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    setVcallStatus('connecting', 'Menghubungkan ke agent...');
+
+    // Get connection params: signed URL (private) or agentId (public)
+    let sessionParams = {};
+    if (elevenLabsKey) {
+      try {
+        setVcallStatus('connecting', 'Membuat signed URL...');
+        const signedRes = await fetch(
+          `https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id=${encodeURIComponent(char.agentId)}`,
+          { headers: { 'xi-api-key': elevenLabsKey } }
+        );
+        if (!signedRes.ok) {
+          const errData = await signedRes.json().catch(() => ({}));
+          throw new Error(errData?.detail?.message || `ElevenLabs API ${signedRes.status}`);
+        }
+        const { signed_url } = await signedRes.json();
+        sessionParams = { signedUrl: signed_url };
+        setVcallStatus('connecting', 'Menghubungkan ke agent...');
+      } catch(e) {
+        // Fall back to agentId if signed URL fails
+        console.warn('[VCall] Signed URL failed, falling back to agentId:', e.message);
+        sessionParams = { agentId: char.agentId };
+      }
+    } else {
+      sessionParams = { agentId: char.agentId };
+    }
+
+    vcall.conversation = await Conversation.startSession({
+      ...sessionParams,
+
+      onConnect: () => {
+        setVcallStatus('connected', 'Terhubung');
+        vcall.startedAt = Date.now();
+        startVcallTimer();
+        document.getElementById('vcall-avatar').className = 'vcall-avatar listening';
+      },
+
+      onDisconnect: () => {
+        if (vcall.active) endVoiceCall(false);
+      },
+
+      onError: (err) => {
+        const msg = err?.message || String(err);
+        showVcallError('Error: ' + msg);
+        console.error('[VCall]', err);
+      },
+
+      onModeChange: ({ mode }) => {
+        const avatarEl = document.getElementById('vcall-avatar');
+        if (mode === 'speaking') {
+          avatarEl.className = 'vcall-avatar speaking';
+          setVcallStatus('connected', `${char.name} sedang bicara...`);
+          startVcallWaveform(true);
+        } else if (mode === 'listening') {
+          avatarEl.className = 'vcall-avatar listening';
+          setVcallStatus('connected', 'Mendengarkan...');
+          startVcallWaveform(false);
+        } else {
+          avatarEl.className = 'vcall-avatar';
+          setVcallStatus('connected', 'Terhubung');
+          startVcallWaveform(false);
+        }
+      },
+
+      onMessage: ({ source, message }) => {
+        appendVcallTranscript(source, message);
+      },
+    });
+
+  } catch(err) {
+    const msg = err?.message || String(err);
+    if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('notallowed')) {
+      showVcallError('Akses mikrofon ditolak. Izinkan mikrofon di browser lalu coba lagi.');
+    } else {
+      showVcallError('Gagal terhubung: ' + msg);
+    }
+    console.error('[VCall] start error:', err);
+    setVcallStatus('ended', 'Gagal terhubung');
+  }
+}
+
+async function endVoiceCall(userInitiated = true) {
+  if (!vcall.active) return;
+  vcall.active = false;
+
+  // Stop ElevenLabs session
+  if (vcall.conversation) {
+    try { await vcall.conversation.endSession(); } catch(e) {}
+    vcall.conversation = null;
+  }
+
+  stopVcallTimer();
+  stopVcallWaveform();
+
+  if (userInitiated) {
+    // Animate close
+    const overlay = document.getElementById('vcall-overlay');
+    overlay.style.transition = 'opacity .3s';
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      overlay.style.opacity = '';
+      overlay.style.transition = '';
+    }, 300);
+  } else {
+    document.getElementById('vcall-overlay').classList.remove('active');
+  }
+
+  setVcallStatus('ended', 'Panggilan berakhir');
+  document.getElementById('vcall-avatar').className = 'vcall-avatar';
+}
+
+function toggleVcallMute() {
+  if (!vcall.conversation) return;
+  vcall.muted = !vcall.muted;
+  vcall.conversation.setMicrophoneVolume(vcall.muted ? 0 : 1);
+  const btn = document.getElementById('vcall-mute-btn');
+  btn.textContent = vcall.muted ? '🔇' : '🎤';
+  btn.classList.toggle('muted', vcall.muted);
+  toast(vcall.muted ? 'Mikrofon dimatikan' : 'Mikrofon aktif', 'info');
+}
+
+function toggleVcallTranscript() {
+  vcall.showTranscript = !vcall.showTranscript;
+  const el = document.getElementById('vcall-transcript');
+  const btn = document.getElementById('vcall-transcript-btn');
+  el.classList.toggle('visible', vcall.showTranscript);
+  btn.classList.toggle('active', vcall.showTranscript);
+}
+
+function appendVcallTranscript(source, message) {
+  const el = document.getElementById('vcall-transcript');
+  const char = characters.find(c => c.id === vcall.charId);
+  const agentLabel = char?.name || 'Agent';
+  const div = document.createElement('div');
+  div.className = 'vc-turn ' + (source === 'ai' ? 'agent' : 'user');
+  div.textContent = (source === 'ai' ? agentLabel : 'Kamu') + ': ' + message;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function setVcallStatus(type, text) {
+  const el = document.getElementById('vcall-status');
+  el.className = 'vcall-status ' + type;
+  document.getElementById('vcall-status-text').textContent = text;
+}
+
+function showVcallError(msg) {
+  const el = document.getElementById('vcall-error');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+// ── Timer ────────────────────────────────────────────────────
+function startVcallTimer() {
+  const timerEl = document.getElementById('vcall-timer');
+  timerEl.classList.add('visible');
+  vcall.timerInterval = setInterval(() => {
+    if (!vcall.startedAt) return;
+    const elapsed = Math.floor((Date.now() - vcall.startedAt) / 1000);
+    const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    const s = String(elapsed % 60).padStart(2, '0');
+    timerEl.textContent = m + ':' + s;
+  }, 1000);
+}
+
+function stopVcallTimer() {
+  if (vcall.timerInterval) { clearInterval(vcall.timerInterval); vcall.timerInterval = null; }
+}
+
+// ── Waveform animation ───────────────────────────────────────
+function startVcallWaveform(speaking) {
+  stopVcallWaveform();
+  const bars = document.querySelectorAll('.vcall-bar');
+  vcall.waveInterval = setInterval(() => {
+    bars.forEach(bar => {
+      const h = speaking
+        ? 6 + Math.random() * 30
+        : 3 + Math.random() * 8;
+      bar.style.height = h + 'px';
+      bar.style.background = speaking
+        ? `rgba(124,111,247,${0.5 + Math.random() * 0.5})`
+        : `rgba(124,111,247,0.3)`;
+    });
+  }, speaking ? 80 : 200);
+}
+
+function stopVcallWaveform() {
+  if (vcall.waveInterval) { clearInterval(vcall.waveInterval); vcall.waveInterval = null; }
+  document.querySelectorAll('.vcall-bar').forEach((b, i) => {
+    b.style.height = [8,14,24,16,10,20,8,18,12][i] + 'px';
+    b.style.background = 'rgba(124,111,247,0.3)';
+  });
+}
+
+// Close overlay on ESC
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && vcall.active) endVoiceCall();
+});
+
+// ── Migrate existing characters: add agentId field ───────────
+(function migrateAgentId() {
+  let changed = false;
+  characters = characters.map(c => {
+    if (!('agentId' in c)) { changed = true; return { ...c, agentId: null }; }
+    return c;
+  });
+  if (changed) saveCharacters();
+})();
+
+// ── Initial button refresh ────────────────────────────────────
+setTimeout(refreshVcallBtn, 300);
 async function serverInit() {
   // Handle ?charId= query param from push notification click
   try {
