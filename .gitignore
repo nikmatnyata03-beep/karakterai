@@ -1,0 +1,42 @@
+```
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+build/
+*.cjs
+*.js
+*.ts
+*.d.ts
+*.map
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Package lock
+package-lock.json
+```
