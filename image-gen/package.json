@@ -1,0 +1,13 @@
+{
+  "name": "image-to-image-ai",
+  "version": "1.0.0",
+  "description": "AI Image to Image Generator using Stable Diffusion",
+  "main": "api/generate.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel deploy --prod"
+  },
+  "dependencies": {
+    "@huggingface/inference": "^2.8.0"
+  }
+}
